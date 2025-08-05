@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gate Controller</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Gate Controller">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkdhdGUgQ29udHJvbGxlciIsCiAgInNob3J0X25hbWUiOiAiR2F0ZSIsCiAgInN0YXJ0X3VybCI6ICIvIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjMmMzZTUwIiwKICAidGhlbWVfY29sb3IiOiAiIzJjM2U1MCIsCiAgImljb25zIjogWwogICAgewogICAgICAic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjNhV1IwYUQwaU1USTRJaUJvWldsbmFIUTlJakV5T0NJZ2RtbGxkMEp2ZUQwaU1DQXdJREV5T0NBeU9EZ2lJR1pwYkd3OUlpTmxZMll3WmpFaVBqeHlaV04wSUhkcFpIUm9QU0l4TWpnaUlHaGxhV2RvZEQwaU1qZzRJaUJtYVd4c1BTSWpNalF4T1RaaVhUOHZjM1puUGc9PSIsCiAgICAgICJzaXplcyI6ICIxMjh4MTI4IiwKICAgICAgInR5cGUiOiAiaW1hZ2Uvc3ZnK3htbCIKICAgIH0KICBdCn0=">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: #ecf0f1;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .header {
+            background: rgba(52, 73, 94, 0.9);
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .header p {
+            color: #bdc3c7;
+            font-size: 14px;
+        }
+
+        .main-content {
+            padding: 20px;
+        }
+
+        .status-section {
+            background: rgba(52, 73, 94, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .status-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .auto-mode-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(44, 62, 80, 0.8);
+            padding: 10px 15px;
+            border-radius: 25px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 25px;
+            background: #7f8c8d;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #27ae60;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 21px;
+            height: 21px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(25px);
+        }
+
+        .connection-status {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .connection-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(44, 62, 80, 0.6);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .status-indicator {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        .status-connected {
+            background: #27ae60;
+            color: white;
+        }
+
+        .status-disconnected {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .status-testing {
+            background: #f39c12;
+            color: white;
+        }
+
+        .controls-section {
+            background: rgba(52, 73, 94, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .control-btn {
+            padding: 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            min-height: 80px;
+            justify-content: center;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-open { background: linear-gradient(135deg, #27ae60, #2ecc71); }
+        .btn-stop { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .btn-close { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .btn-partial { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+
+        .info-section {
+            background: rgba(52, 73, 94, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .refresh-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .proximity-status {
+            text-align: center;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        .proximity-active {
+            background: rgba(39, 174, 96, 0.2);
+            border: 2px solid #27ae60;
+            color: #27ae60;
+        }
+
+        .proximity-inactive {
+            background: rgba(189, 195, 199, 0.2);
+            border: 2px solid #7f8c8d;
+            color: #bdc3c7;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .command-log {
+            max-height: 100px;
+            overflow-y: auto;
+            background: rgba(44, 62, 80, 0.6);
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .log-entry {
+            margin-bottom: 3px;
+            color: #bdc3c7;
+        }
+
+        .log-success { color: #27ae60; }
+        .log-error { color: #e74c3c; }
+        .log-info { color: #3498db; }
+
+        /* Install prompt */
+        .install-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: #3498db;
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+
+        .install-btn {
+            background: white;
+            color: #3498db;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                max-width: 100%;
+            }
+            
+            .main-content {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚪 Gate Controller</h1>
+            <p>GC001 - Smart Multi-Method Control</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Auto Mode Toggle -->
+            <div class="auto-mode-toggle">
+                <span>🤖 Auto Proximity Mode</span>
+                <div class="toggle-switch" id="autoToggle">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+
+            <!-- Proximity Status -->
+            <div class="proximity-status proximity-inactive" id="proximityStatus">
+                📍 Proximity Detection: Inactive
+            </div>
+
+            <!-- Connection Status -->
+            <div class="status-section">
+                <div class="status-header">
+                    <h2 class="status-title">📡 Connection Status</h2>
+                    <div class="loading" id="statusLoader" style="display: none;"></div>
+                </div>
+                
+                <div class="connection-status">
+                    <div class="connection-item">
+                        <span>🌐 Direct Web (ESP32)</span>
+                        <span class="status-indicator status-testing" id="webStatus">Testing...</span>
+                    </div>
+                    <div class="connection-item">
+                        <span>☁️ Dashboard API</span>
+                        <span class="status-indicator status-testing" id="dashboardStatus">Testing...</span>
+                    </div>
+                    <div class="connection-item">
+                        <span>📍 GPS Location</span>
+                        <span class="status-indicator status-testing" id="gpsStatus">Testing...</span>
+                    </div>
+                    <div class="connection-item">
+                        <span>🔵 Web Bluetooth</span>
+                        <span class="status-indicator status-testing" id="bluetoothStatus">Testing...</span>
+                    </div>
+                </div>
+
+                <button class="refresh-btn" onclick="testAllConnections()">
+                    🔄 Refresh Connections
+                </button>
+            </div>
+
+            <!-- Manual Controls -->
+            <div class="controls-section">
+                <h2 class="status-title">🎮 Manual Control</h2>
+                <div class="controls-grid">
+                    <button class="control-btn btn-open" onclick="sendCommand('open')">
+                        <span>🟢</span>
+                        <span>OPEN</span>
+                    </button>
+                    <button class="control-btn btn-stop" onclick="sendCommand('stop')">
+                        <span>🟡</span>
+                        <span>STOP</span>
+                    </button>
+                    <button class="control-btn btn-close" onclick="sendCommand('close')">
+                        <span>🔴</span>
+                        <span>CLOSE</span>
+                    </button>
+                    <button class="control-btn btn-partial" onclick="sendCommand('partial')">
+                        <span>🟣</span>
+                        <span>PARTIAL</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- System Info -->
+            <div class="info-section">
+                <h2 class="status-title">📊 System Info</h2>
+                <div class="info-item">
+                    <span>Gate Status:</span>
+                    <span id="gateStatus">Unknown</span>
+                </div>
+                <div class="info-item">
+                    <span>Last Command:</span>
+                    <span id="lastCommand">None</span>
+                </div>
+                <div class="info-item">
+                    <span>Distance to Gate:</span>
+                    <span id="distanceToGate">Calculating...</span>
+                </div>
+                <div class="info-item">
+                    <span>App Version:</span>
+                    <span>PWA v1.0</span>
+                </div>
+                
+                <div class="command-log" id="commandLog">
+                    <div class="log-entry log-info">📱 Gate Controller PWA Started</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Install Prompt -->
+    <div class="install-prompt" id="installPrompt">
+        <span>📱 Install Gate Controller on your home screen?</span>
+        <button class="install-btn" onclick="installApp()">Install</button>
+        <button class="install-btn" onclick="dismissInstall()" style="background: transparent; color: white;">✕</button>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            ESP32_IP: '10.100.102.16',
+            RAILWAY_API: 'https://gate-controller-system-production.up.railway.app',
+            AUTH_TOKEN: 'test_token_gc001',
+            GATE_LOCATION: {
+                lat: 32.0853, // Replace with your gate's actual coordinates
+                lon: 34.7818  // Petah Tikva area example
+            },
+            PROXIMITY_THRESHOLD: 50 // meters
+        };
+
+        // State
+        let autoMode = localStorage.getItem('autoMode') === 'true';
+        let proximityWatcher = null;
+        let connectionStatus = {
+            web: false,
+            dashboard: false,
+            gps: false,
+            bluetooth: false
+        };
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            log('🚀 Initializing Gate Controller PWA...', 'info');
+            
+            // Set auto mode toggle
+            const toggle = document.getElementById('autoToggle');
+            if (autoMode) {
+                toggle.classList.add('active');
+                startProximityWatching();
+            }
+            toggle.addEventListener('click', toggleAutoMode);
+
+            // Test all connections
+            testAllConnections();
+
+            // Set up periodic checks
+            setInterval(testAllConnections, 30000); // Every 30 seconds
+            
+            // Check for app install prompt
+            window.addEventListener('beforeinstallprompt', handleInstallPrompt);
+            
+            log('✅ App initialized successfully', 'success');
+        }
+
+        function toggleAutoMode() {
+            autoMode = !autoMode;
+            localStorage.setItem('autoMode', autoMode.toString());
+            
+            const toggle = document.getElementById('autoToggle');
+            const proximityStatus = document.getElementById('proximityStatus');
+            
+            if (autoMode) {
+                toggle.classList.add('active');
+                startProximityWatching();
+                proximityStatus.className = 'proximity-status proximity-active';
+                proximityStatus.textContent = '📍 Proximity Detection: Active';
+                log('🤖 Auto mode enabled', 'info');
+            } else {
+                toggle.classList.remove('active');
+                stopProximityWatching();
+                proximityStatus.className = 'proximity-status proximity-inactive';
+                proximityStatus.textContent = '📍 Proximity Detection: Inactive';
+                log('🤖 Auto mode disabled', 'info');
+            }
+        }
+
+        function startProximityWatching() {
+            if (!navigator.geolocation) {
+                log('❌ Geolocation not supported', 'error');
+                return;
+            }
+
+            if (proximityWatcher) {
+                stopProximityWatching();
+            }
+
+            proximityWatcher = navigator.geolocation.watchPosition(
+                handleLocationUpdate,
+                handleLocationError,
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 30000
+                }
+            );
+
+            log('📍 Started proximity watching', 'info');
+        }
+
+        function stopProximityWatching() {
+            if (proximityWatcher) {
+                navigator.geolocation.clearWatch(proximityWatcher);
+                proximityWatcher = null;
+                log('📍 Stopped proximity watching', 'info');
+            }
+        }
+
+        function handleLocationUpdate(position) {
+            const distance = calculateDistance(
+                position.coords.latitude,
+                position.coords.longitude,
+                CONFIG.GATE_LOCATION.lat,
+                CONFIG.GATE_LOCATION.lon
+            );
+
+            document.getElementById('distanceToGate').textContent = `${Math.round(distance)}m`;
+
+            if (distance <= CONFIG.PROXIMITY_THRESHOLD && autoMode) {
+                const lastAutoOpen = localStorage.getItem('lastAutoOpen');
+                const now = Date.now();
+                
+                // Prevent repeated auto-opens (30 second cooldown)
+                if (!lastAutoOpen || now - parseInt(lastAutoOpen) > 30000) {
+                    localStorage.setItem('lastAutoOpen', now.toString());
+                    log(`🚗 Auto-opening gate (${Math.round(distance)}m from gate)`, 'success');
+                    sendCommand('open', 'proximity');
+                }
+            }
+
+            connectionStatus.gps = true;
+            updateConnectionStatus('gpsStatus', true);
+        }
+
+        function handleLocationError(error) {
+            log(`❌ Location error: ${error.message}`, 'error');
+            connectionStatus.gps = false;
+            updateConnectionStatus('gpsStatus', false);
+            document.getElementById('distanceToGate').textContent = 'Error';
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; // Earth's radius in meters
+            const φ1 = lat1 * Math.PI/180;
+            const φ2 = lat2 * Math.PI/180;
+            const Δφ = (lat2-lat1) * Math.PI/180;
+            const Δλ = (lon2-lon1) * Math.PI/180;
+
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                    Math.cos(φ1) * Math.cos(φ2) *
+                    Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+            return R * c;
+        }
+
+        async function testAllConnections() {
+            document.getElementById('statusLoader').style.display = 'inline-block';
+            
+            // Test direct web connection
+            testWebConnection();
+            
+            // Test dashboard API
+            testDashboardConnection();
+            
+            // Test GPS
+            testGPSConnection();
+            
+            // Test Web Bluetooth
+            testBluetoothConnection();
+            
+            setTimeout(() => {
+                document.getElementById('statusLoader').style.display = 'none';
+            }, 3000);
+        }
+
+        async function testWebConnection() {
+            try {
+                const response = await fetch(`http://${CONFIG.ESP32_IP}/health`, {
+                    timeout: 3000
+                });
+                
+                if (response.ok) {
+                    connectionStatus.web = true;
+                    updateConnectionStatus('webStatus', true);
+                    log('✅ Direct web connection OK', 'success');
+                } else {
+                    throw new Error('Response not OK');
+                }
+            } catch (error) {
+                connectionStatus.web = false;
+                updateConnectionStatus('webStatus', false);
+                log('❌ Direct web connection failed', 'error');
+            }
+        }
+
+        async function testDashboardConnection() {
+            try {
+                const response = await fetch(`${CONFIG.RAILWAY_API}/api/device/GC001/status`, {
+                    headers: {
+                        'Authorization': `Bearer ${CONFIG.AUTH_TOKEN}`
+                    },
+                    timeout: 5000
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    connectionStatus.dashboard = true;
+                    updateConnectionStatus('dashboardStatus', true);
+                    document.getElementById('gateStatus').textContent = data.status || 'Online';
+                    log('✅ Dashboard API connection OK', 'success');
+                } else {
+                    throw new Error('Response not OK');
+                }
+            } catch (error) {
+                connectionStatus.dashboard = false;
+                updateConnectionStatus('dashboardStatus', false);
+                log('❌ Dashboard API connection failed', 'error');
+            }
+        }
+
+        function testGPSConnection() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        connectionStatus.gps = true;
+                        updateConnectionStatus('gpsStatus', true);
+                        log('✅ GPS location OK', 'success');
+                    },
+                    (error) => {
+                        connectionStatus.gps = false;
+                        updateConnectionStatus('gpsStatus', false);
+                        log('❌ GPS location failed', 'error');
+                    },
+                    { timeout: 5000 }
+                );
+            } else {
+                connectionStatus.gps = false;
+                updateConnectionStatus('gpsStatus', false);
+                log('❌ GPS not supported', 'error');
+            }
+        }
+
+        function testBluetoothConnection() {
+            if (navigator.bluetooth) {
+                connectionStatus.bluetooth = true;
+                updateConnectionStatus('bluetoothStatus', true);
+                log('✅ Web Bluetooth supported', 'success');
+            } else {
+                connectionStatus.bluetooth = false;
+                updateConnectionStatus('bluetoothStatus', false);
+                log('❌ Web Bluetooth not supported', 'error');
+            }
+        }
+
+        function updateConnectionStatus(elementId, connected) {
+            const element = document.getElementById(elementId);
+            if (connected) {
+                element.className = 'status-indicator status-connected';
+                element.textContent = 'Connected';
+            } else {
+                element.className = 'status-indicator status-disconnected';
+                element.textContent = 'Failed';
+            }
+        }
+
+        async function sendCommand(command, source = 'manual') {
+            const commandMap = {
+                'open': 1,
+                'stop': 2,
+                'close': 3,
+                'partial': 4
+            };
+
+            const relayNumber = commandMap[command.toLowerCase()];
+            if (!relayNumber) {
+                log(`❌ Invalid command: ${command}`, 'error');
+                return;
+            }
+
+            log(`🎮 Sending command: ${command.toUpperCase()} (${source})`, 'info');
+            document.getElementById('lastCommand').textContent = `${command.toUpperCase()} (${source})`;
+
+            // Try methods in order of preference
+            let success = false;
+
+            // 1. Try direct web connection
+            if (connectionStatus.web && !success) {
+                success = await sendWebCommand(relayNumber, command);
+            }
+
+            // 2. Try dashboard API
+            if (connectionStatus.dashboard && !success) {
+                success = await sendDashboardCommand(relayNumber, command);
+            }
+
+            if (!success) {
+                log('❌ All command methods failed', 'error');
+                alert('❌ Unable to send command. Please check connections.');
+            }
+        }
+
+        async function sendWebCommand(relayNumber, command) {
+            try {
+                const response = await fetch(`http://${CONFIG.ESP32_IP}/api/command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${CONFIG.AUTH_TOKEN}`
+                    },
+                    body: JSON.stringify({
+                        id: `pwa_${Date.now()}`,
+                        action: 'relay_activate',
+                        relay: relayNumber,
+                        duration: 2000,
+                        source: 'pwa',
+                        user: 'pwa_user'
+                    })
+                });
+
+                if (response.ok) {
+                    log(`✅ Web command sent: ${command.toUpperCase()}`, 'success');
+                    return true;
+                } else {
+                    throw new Error('Web command failed');
+                }
+            } catch (error) {
+                log(`❌ Web command failed: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function sendDashboardCommand(relayNumber, command) {
+            try {
+                const response = await fetch(`${CONFIG.RAILWAY_API}/api/device/command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${CONFIG.AUTH_TOKEN}`
+                    },
+                    body: JSON.stringify({
+                        deviceId: 'GC001',
+                        command: {
+                            id: `pwa_${Date.now()}`,
+                            action: 'relay_activate',
+                            relay: relayNumber,
+                            duration: 2000,
+                            source: 'pwa',
+                            user: 'pwa_user'
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    log(`✅ Dashboard command sent: ${command.toUpperCase()}`, 'success');
+                    return true;
+                } else {
+                    throw new Error('Dashboard command failed');
+                }
+            } catch (error) {
+                log(`❌ Dashboard command failed: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('commandLog');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            
+            // Keep only last 20 entries
+            while (logContainer.children.length > 20) {
+                logContainer.removeChild(logContainer.firstChild);
+            }
+            
+            console.log(message);
+        }
+
+        // PWA Install functionality
+        let deferredPrompt;
+
+        function handleInstallPrompt(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installPrompt').style.display = 'flex';
+        }
+
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        log('✅ PWA installed successfully', 'success');
+                    }
+                    deferredPrompt = null;
+                    dismissInstall();
+                });
+            }
+        }
+
+        function dismissInstall() {
+            document.getElementById('installPrompt').style.display = 'none';
+        }
+
+        // Service Worker registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swCode = `
+                    const CACHE_NAME = 'gate-controller-v1';
+                    const urlsToCache = [
+                        '/',
+                        '/offline.html'
+                    ];
+
+                    self.addEventListener('install', (event) => {
+                        event.waitUntil(
+                            caches.open(CACHE_NAME)
+                                .then((cache) => cache.addAll(urlsToCache))
+                        );
+                    });
+
+                    self.addEventListener('fetch', (event) => {
+                        event.respondWith(
+                            caches.match(event.request)
+                                .then((response) => {
+                                    if (response) {
+                                        return response;
+                                    }
+                                    return fetch(event.request);
+                                })
+                        );
+                    });
+                `;
+
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+
+                navigator.serviceWorker.register(swUrl)
+                    .then((registration) => {
+                        log('✅ Service Worker registered', 'success');
+                    })
+                    .catch((error) => {
+                        log('❌ Service Worker registration failed', 'error');
+                    });
+            });
+        }
+
+        // Wake lock to prevent screen from sleeping during proximity detection
+        let wakeLock = null;
+
+        async function requestWakeLock() {
+            if ('wakeLock' in navigator && autoMode) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    log('🔓 Screen wake lock acquired', 'info');
+                } catch (err) {
+                    log('❌ Wake lock failed', 'error');
+                }
+            }
+        }
+
+        function releaseWakeLock() {
+            if (wakeLock) {
+                wakeLock.release();
+                wakeLock = null;
+                log('🔒 Screen wake lock released', 'info');
+            }
+        }
+
+        // Update wake lock when auto mode changes
+        const originalToggleAutoMode = toggleAutoMode;
+        toggleAutoMode = function() {
+            originalToggleAutoMode();
+            if (autoMode) {
+                requestWakeLock();
+            } else {
+                releaseWakeLock();
+            }
+        };
+
+        // Handle visibility change
+        document.addEventListener('visibilitychange', () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') {
+                requestWakeLock();
+            }
+        });
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', (event) => {
+            if (event.ctrlKey || event.metaKey) {
+                switch(event.key.toLowerCase()) {
+                    case 'o':
+                        event.preventDefault();
+                        sendCommand('open');
+                        break;
+                    case 's':
+                        event.preventDefault();
+                        sendCommand('stop');
+                        break;
+                    case 'c':
+                        event.preventDefault();
+                        sendCommand('close');
+                        break;
+                    case 'p':
+                        event.preventDefault();
+                        sendCommand('partial');
+                        break;
+                    case 'r':
+                        event.preventDefault();
+                        testAllConnections();
+                        break;
+                }
+            }
+        });
+
+        // Add haptic feedback for mobile devices
+        function vibrateDevice(pattern = [100]) {
+            if ('vibrate' in navigator) {
+                navigator.vibrate(pattern);
+            }
+        }
+
+        // Update button clicks to include haptic feedback
+        const buttons = document.querySelectorAll('.control-btn');
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                vibrateDevice([50]);
+            });
+        });
+
+        // Add network status monitoring
+        function updateNetworkStatus() {
+            const isOnline = navigator.onLine;
+            if (!isOnline) {
+                log('📴 Device is offline', 'error');
+            } else {
+                log('📶 Device is online', 'success');
+            }
+        }
+
+        window.addEventListener('online', () => {
+            updateNetworkStatus();
+            testAllConnections();
+        });
+
+        window.addEventListener('offline', updateNetworkStatus);
+
+        // Add battery status monitoring (if supported)
+        if ('getBattery' in navigator) {
+            navigator.getBattery().then((battery) => {
+                function updateBatteryInfo() {
+                    const level = Math.round(battery.level * 100);
+                    if (level < 20) {
+                        log(`🔋 Low battery: ${level}%`, 'error');
+                    }
+                }
+
+                battery.addEventListener('levelchange', updateBatteryInfo);
+                updateBatteryInfo();
+            });
+        }
+
+        // Add gesture support for mobile
+        let touchStartX, touchStartY, touchEndX, touchEndY;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            touchEndY = e.changedTouches[0].screenY;
+            handleGesture();
+        });
+
+        function handleGesture() {
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+            const minSwipeDistance = 100;
+
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+                if (deltaX > 0) {
+                    // Swipe right - Open gate
+                    sendCommand('open');
+                    vibrateDevice([100, 50, 100]);
+                } else {
+                    // Swipe left - Close gate
+                    sendCommand('close');
+                    vibrateDevice([100, 50, 100]);
+                }
+            } else if (Math.abs(deltaY) > minSwipeDistance) {
+                if (deltaY < 0) {
+                    // Swipe up - Refresh connections
+                    testAllConnections();
+                    vibrateDevice([50]);
+                }
+            }
+        }
+
+        // Add voice commands (experimental)
+        function initializeVoiceCommands() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const recognition = new SpeechRecognition();
+                
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+
+                recognition.onresult = (event) => {
+                    const command = event.results[0][0].transcript.toLowerCase();
+                    log(`🎤 Voice command: "${command}"`, 'info');
+                    
+                    if (command.includes('open') || command.includes('gate open')) {
+                        sendCommand('open', 'voice');
+                    } else if (command.includes('close') || command.includes('gate close')) {
+                        sendCommand('close', 'voice');
+                    } else if (command.includes('stop')) {
+                        sendCommand('stop', 'voice');
+                    } else if (command.includes('status')) {
+                        testAllConnections();
+                    }
+                };
+
+                recognition.onerror = (event) => {
+                    log(`❌ Voice recognition error: ${event.error}`, 'error');
+                };
+
+                // Add voice control button
+                const voiceButton = document.createElement('button');
+                voiceButton.innerHTML = '🎤 Voice Control';
+                voiceButton.className = 'refresh-btn';
+                voiceButton.style.marginTop = '10px';
+                voiceButton.onclick = () => {
+                    recognition.start();
+                    log('🎤 Listening for voice command...', 'info');
+                    vibrateDevice([100]);
+                };
+
+                document.querySelector('.info-section').appendChild(voiceButton);
+                log('✅ Voice commands initialized', 'success');
+            } else {
+                log('❌ Voice recognition not supported', 'error');
+            }
+        }
+
+        // Initialize voice commands after a delay
+        setTimeout(initializeVoiceCommands, 2000);
+
+        // Add emergency mode (double-tap to open regardless of proximity)
+        let tapCount = 0;
+        let tapTimer = null;
+
+        document.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BODY' || e.target.className.includes('container')) {
+                tapCount++;
+                
+                if (tapCount === 1) {
+                    tapTimer = setTimeout(() => {
+                        tapCount = 0;
+                    }, 500);
+                } else if (tapCount === 2) {
+                    clearTimeout(tapTimer);
+                    tapCount = 0;
+                    
+                    // Emergency open
+                    log('🚨 Emergency double-tap detected', 'info');
+                    sendCommand('open', 'emergency');
+                    vibrateDevice([200, 100, 200]);
+                }
+            }
+        });
+
+        // Add configuration panel (hidden by default)
+        function createConfigPanel() {
+            const configHTML = `
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <details>
+                        <summary style="cursor: pointer; font-weight: bold; margin-bottom: 10px;">⚙️ Advanced Settings</summary>
+                        <div style="padding: 10px; background: rgba(44,62,80,0.6); border-radius: 8px; margin-top: 10px;">
+                            <div style="margin-bottom: 10px;">
+                                <label style="display: block; margin-bottom: 5px;">Proximity Threshold (meters):</label>
+                                <input type="range" id="proximitySlider" min="10" max="200" value="${CONFIG.PROXIMITY_THRESHOLD}" 
+                                       style="width: 100%;" onchange="updateProximityThreshold(this.value)">
+                                <span id="proximityValue">${CONFIG.PROXIMITY_THRESHOLD}m</span>
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <label style="display: block; margin-bottom: 5px;">ESP32 IP Address:</label>
+                                <input type="text" id="esp32IP" value="${CONFIG.ESP32_IP}" 
+                                       style="width: 100%; padding: 5px; border-radius: 4px; border: none; background: rgba(0,0,0,0.3); color: white;"
+                                       onchange="updateESP32IP(this.value)">
+                            </div>
+                            <button onclick="exportConfig()" style="width: 48%; margin-right: 2%;" class="refresh-btn">📤 Export</button>
+                            <button onclick="importConfig()" style="width: 48%; margin-left: 2%;" class="refresh-btn">📥 Import</button>
+                        </div>
+                    </details>
+                </div>
+            `;
+            
+            document.querySelector('.info-section').insertAdjacentHTML('beforeend', configHTML);
+        }
+
+        function updateProximityThreshold(value) {
+            CONFIG.PROXIMITY_THRESHOLD = parseInt(value);
+            document.getElementById('proximityValue').textContent = value + 'm';
+            localStorage.setItem('proximityThreshold', value);
+            log(`⚙️ Proximity threshold updated: ${value}m`, 'info');
+        }
+
+        function updateESP32IP(value) {
+            CONFIG.ESP32_IP = value;
+            localStorage.setItem('esp32IP', value);
+            log(`⚙️ ESP32 IP updated: ${value}`, 'info');
+            testAllConnections();
+        }
+
+        function exportConfig() {
+            const config = {
+                proximityThreshold: CONFIG.PROXIMITY_THRESHOLD,
+                esp32IP: CONFIG.ESP32_IP,
+                gateLocation: CONFIG.GATE_LOCATION,
+                autoMode: autoMode
+            };
+            
+            const dataStr = JSON.stringify(config, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'gate-controller-config.json';
+            link.click();
+            
+            log('✅ Configuration exported', 'success');
+        }
+
+        function importConfig() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const config = JSON.parse(e.target.result);
+                            
+                            if (config.proximityThreshold) {
+                                CONFIG.PROXIMITY_THRESHOLD = config.proximityThreshold;
+                                document.getElementById('proximitySlider').value = config.proximityThreshold;
+                                updateProximityThreshold(config.proximityThreshold);
+                            }
+                            
+                            if (config.esp32IP) {
+                                CONFIG.ESP32_IP = config.esp32IP;
+                                document.getElementById('esp32IP').value = config.esp32IP;
+                                updateESP32IP(config.esp32IP);
+                            }
+                            
+                            log('✅ Configuration imported', 'success');
+                        } catch (error) {
+                            log('❌ Invalid configuration file', 'error');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+
+        // Load saved settings
+        function loadSavedSettings() {
+            const savedProximity = localStorage.getItem('proximityThreshold');
+            if (savedProximity) {
+                CONFIG.PROXIMITY_THRESHOLD = parseInt(savedProximity);
+            }
+            
+            const savedIP = localStorage.getItem('esp32IP');
+            if (savedIP) {
+                CONFIG.ESP32_IP = savedIP;
+            }
+        }
+
+        // Initialize config panel and load settings
+        setTimeout(() => {
+            createConfigPanel();
+            loadSavedSettings();
+        }, 1000);
+
+        // Add notification support
+        function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().then((permission) => {
+                    if (permission === 'granted') {
+                        log('✅ Notifications enabled', 'success');
+                    }
+                });
+            }
+        }
+
+        function showNotification(title, body) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: body,
+                    icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDEyOCAyODgiIGZpbGw9IiNlY2YwZjEiPjxyZWN0IHdpZHRoPSIxMjgiIGhlaWdodD0iMjg4IiBmaWxsPSIjMjQxOTZiIi8+PC9zdmc+',
+                    badge: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDEyOCAyODgiIGZpbGw9IiNlY2YwZjEiPjxyZWN0IHdpZHRoPSIxMjgiIGhlaWdodD0iMjg4IiBmaWxsPSIjMjQxOTZiIi8+PC9zdmc+'
+                });
+            }
+        }
+
+        // Request notification permission after app loads
+        setTimeout(requestNotificationPermission, 3000);
+
+        // Override sendCommand to include notifications
+        const originalSendCommand = sendCommand;
+        sendCommand = async function(command, source = 'manual') {
+            const result = await originalSendCommand(command, source);
+            
+            if (source === 'proximity') {
+                showNotification('🚪 Gate Controller', `Gate ${command.toUpperCase()} via proximity detection`);
+            }
+            
+            return result;
+        };
+
+        log('🎉 Gate Controller PWA fully loaded with all features!', 'success');
+    </script>
+</body>
+</html>
